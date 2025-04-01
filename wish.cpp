@@ -1,10 +1,10 @@
 #include <iostream>
+#include <sstream>
+#include <vector>
+#include <cstring>
 #include <unistd.h>
 
 using namespace std;
-
-
-
 
 int main(int argc, char *argv[])
 {
@@ -18,13 +18,29 @@ int main(int argc, char *argv[])
 
             // Reads a line from stream into our String 
             getline(cin, command);
+            
+            // Split the command into arguments
+            stringstream ss(command);
+            string arg;
+            vector<string> args;
+            while (ss >> arg)
+            {
+                args.push_back(arg);
+            }
 
-            if(command != "exit")
+            // Print the number of arguments For debugging purposes 
+            cout << "Number of arguments: " << args.size() << endl;
+
+            if(args[0] != "exit")
             {
                 //If the first check comes true it wont need to do the second, but if its -1 then it will go check the second one too
-                if (access(("/bin/" + command).c_str(), X_OK) == 0 || access(("/usr/bin/" + command).c_str(), X_OK)  == 0)
+                if (access(("/bin/" + args[0]).c_str(), X_OK) == 0 || access(("/usr/bin/" + args[0]).c_str(), X_OK)  == 0)
                 {
                     cout<<"Command Exists !"<<endl;
+                }
+                else if (args[0] == "cd")
+                {
+                    cout<<"continue : "<<args[1]<<endl;
                 }
                 else
                 {
