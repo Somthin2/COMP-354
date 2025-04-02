@@ -8,13 +8,14 @@
 #include <sys/wait.h>
 #include <fstream>
 #include <algorithm>
+#include <fcntl.h>
 
 using namespace std;
 
 // Function to read paths from paths.txt
 vector<string> readPaths();
-void storePaths(vector<string> &paths);
-bool isStringInVector();
+void storePaths(vector<string> &paths,const string fileName);
+int isStringInVector(const vector<string> &vec, const string &str);
 
 int main(int argc, char *argv[])
 {
@@ -65,7 +66,7 @@ int main(int argc, char *argv[])
 
                     // maybe can split the task here ask so you know
 
-                    storePaths(paths);
+                    storePaths(paths, "paths.txt");
 
                     cout<<"Paths have been updated"<<endl;
                 }
@@ -81,11 +82,43 @@ int main(int argc, char *argv[])
 
                             if (pid == 0)
                             {
-                                if (isStringInVector(args,">"))
+                                int pos = isStringInVector(args,">");
+                                if (pos != -1)
                                 {
-                                    cout<<"Worked !"<<endl;
+                                    // Currenlty im assuming after > only one argument can be placed
+                                    if (args.size() - pos != 2)
+                                    {
+                                        cout<<"Invalid arguments"<<endl;
+                                        exit(1);
+                                    }
+                                    else
+                                    {
+                                       // Open the file for writing
+                                        int fd = open(args[pos + 1].c_str(), O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
+                                        if (fd < 0)
+                                        {
+                                            cerr << "Failed to open file: " << args[pos + 1] << endl;
+                                            exit(1);
+                                        }
+
+                                        // Redirect stdout to the file
+                                        dup2(fd, STDOUT_FILENO);
+                                        close(fd);
+
+                                        // Prepare arguments for execv
+                                        vector<char *> execArgs;
+                                        for (int i = 0; i < pos; ++i)
+                                        {
+                                            execArgs.push_back(const_cast<char *>(args[i].c_str()));
+                                        }
+                                        execArgs.push_back(nullptr);
+
+                                        execv((path + "/" + args[0]).c_str(), execArgs.data());
+                                        cerr << "Failed to execute command: " << args[0] << endl;
+                                        exit(1);
+                                    }
                                 }
-                                
+
                                 execv((path + "/" + command).c_str(), 0);
                                 exit(0);
                             }
@@ -144,9 +177,9 @@ vector<string> readPaths()
     return paths;
 }
 
-void storePaths(vector<string> &paths)
+void storePaths(vector<string> &paths,const string fileName)
 {
-    ofstream file("paths.txt"); 
+    ofstream file(fileName); 
 
     if (file.is_open())
     {
@@ -163,7 +196,15 @@ void storePaths(vector<string> &paths)
     }
 }
 
-bool isStringInVector(const vector<string> &vec, const string &str)
+int isStringInVector(const vector<string> &vec, const string &str)
 {
-    return find(vec.begin(), vec.end(), str) != vec.end();
+    auto it = find(vec.begin(), vec.end(), str);
+    if (it != vec.end())
+    {
+        return distance(vec.begin(), it);
+    }
+    else
+    {
+        return -1; 
+    }
 }
