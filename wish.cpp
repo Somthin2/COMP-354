@@ -6,8 +6,12 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <sys/wait.h>
+#include <fstream>
 
 using namespace std;
+
+// Function to read paths from paths.txt
+vector<string> readPaths();
 
 int main(int argc, char *argv[])
 {
@@ -19,13 +23,16 @@ int main(int argc, char *argv[])
             cout << "wish> " ;
             string command;
 
+
+
             // Reads a line from stream into our String 
             getline(cin, command);
             
             // Split the command into arguments
             stringstream ss(command);
             string arg;
-            vector<string> args;
+            vector<string> args,paths = readPaths();
+            
             while (ss >> arg)
             {
                 args.push_back(arg);
@@ -33,23 +40,7 @@ int main(int argc, char *argv[])
 
             if(args[0] != "exit")
             {
-                //If the first check comes true it wont need to do the second, but if its -1 then it will go check the second one too
-                if (access(("/bin/" + args[0]).c_str(), X_OK) == 0 || access(("/usr/bin/" + args[0]).c_str(), X_OK)  == 0)
-                {
-                    int pid = fork();
-
-                    if (pid == 0)
-                    {
-                        execv(("/bin/" +  args[0]).c_str(), 0);
-                    }
-                    else
-                    { 
-                        wait(NULL);
-                        continue ;
-                    }
-                    
-                }
-                else if (args[0] == "cd")
+                if (args[0] == "cd")
                 {
                     if (args.size() != 2)
                     {
@@ -61,10 +52,16 @@ int main(int argc, char *argv[])
                         cout << chdir(args[1].c_str()) << endl ;
                     }
                 }
+                else if (args[0] == "path")
+                {
+                    
+                }
                 else
                 {
+
                     cout<<"Wrong Input !"<<endl;
                 }
+                
             }
             else
             {
@@ -80,4 +77,27 @@ int main(int argc, char *argv[])
         cout << "Just started by passing variables" << endl;
     }
     return 0;
+}
+
+vector<string> readPaths()
+{
+    vector<string> paths;
+    ifstream file("paths.txt");
+    string line;
+
+    if (file.is_open())
+    {
+        while (getline(file, line))
+        {
+            paths.push_back(line);
+        }
+        file.close();
+    }
+    else
+    {
+        // For debugging
+        cout << "Unable to open file: " << "paths.txt" << endl;
+    }
+
+    return paths;
 }
