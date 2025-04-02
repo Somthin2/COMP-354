@@ -7,12 +7,14 @@
 #include <stddef.h>
 #include <sys/wait.h>
 #include <fstream>
+#include <algorithm>
 
 using namespace std;
 
 // Function to read paths from paths.txt
 vector<string> readPaths();
 void storePaths(vector<string> &paths);
+bool isStringInVector();
 
 int main(int argc, char *argv[])
 {
@@ -73,12 +75,17 @@ int main(int argc, char *argv[])
 
                     for (const string &path : paths)
                     {
-                        if (access((path + "/" + command).c_str(), X_OK) == 0)
+                        if (access((path + "/" + args[0]).c_str(), X_OK) == 0)
                         {
                             int pid = fork();
 
                             if (pid == 0)
                             {
+                                if (isStringInVector(args,">"))
+                                {
+                                    cout<<"Worked !"<<endl;
+                                }
+                                
                                 execv((path + "/" + command).c_str(), 0);
                                 exit(0);
                             }
@@ -154,4 +161,9 @@ void storePaths(vector<string> &paths)
         // For debugging
         cerr << "Unable to open file: paths.txt" << endl;
     }
+}
+
+bool isStringInVector(const vector<string> &vec, const string &str)
+{
+    return find(vec.begin(), vec.end(), str) != vec.end();
 }
