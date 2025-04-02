@@ -3,6 +3,9 @@
 #include <vector>
 #include <cstring>
 #include <unistd.h>
+#include <stdlib.h>
+#include <stddef.h>
+#include <sys/wait.h>
 
 using namespace std;
 
@@ -28,19 +31,35 @@ int main(int argc, char *argv[])
                 args.push_back(arg);
             }
 
-            // Print the number of arguments For debugging purposes 
-            cout << "Number of arguments: " << args.size() << endl;
-
             if(args[0] != "exit")
             {
                 //If the first check comes true it wont need to do the second, but if its -1 then it will go check the second one too
                 if (access(("/bin/" + args[0]).c_str(), X_OK) == 0 || access(("/usr/bin/" + args[0]).c_str(), X_OK)  == 0)
                 {
-                    cout<<"Command Exists !"<<endl;
+                    int pid = fork();
+
+                    if (pid == 0)
+                    {
+                        execv(("/bin/" +  args[0]).c_str(), 0);
+                    }
+                    else
+                    { 
+                        wait(NULL);
+                        continue ;
+                    }
+                    
                 }
                 else if (args[0] == "cd")
                 {
-                    cout<<"continue : "<<args[1]<<endl;
+                    if (args.size() != 2)
+                    {
+                        cout<<"Invalid Command"<<endl;
+                        continue;
+                    }
+                    else
+                    {
+                        cout << chdir(args[1].c_str()) << endl ;
+                    }
                 }
                 else
                 {
