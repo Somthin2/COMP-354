@@ -12,7 +12,7 @@ using namespace std;
 
 // Function to read paths from paths.txt
 vector<string> readPaths();
-vector<string> storePaths(vector<string> &paths);
+void storePaths(vector<string> &paths);
 
 int main(int argc, char *argv[])
 {
@@ -23,8 +23,6 @@ int main(int argc, char *argv[])
         {
             cout << "wish> " ;
             string command;
-
-
 
             // Reads a line from stream into our String 
             getline(cin, command);
@@ -55,7 +53,19 @@ int main(int argc, char *argv[])
                 }
                 else if (args[0] == "path")
                 {
-                    
+                    paths.clear();
+
+                    for (int i = 1 ; i < args.size(); i++)
+                    {
+                        // This will store them for now in the paths vector but this is only temporary
+                        paths.push_back(args[i]);
+                    }
+
+                    // maybe can split the task here ask so you know
+
+                    storePaths(paths);
+
+                    cout<<"Paths have been updated"<<endl;
                 }
                 else
                 {
@@ -127,13 +137,13 @@ vector<string> readPaths()
     return paths;
 }
 
-vector<string> storePaths(vector<string> &paths)
+void storePaths(vector<string> &paths)
 {
     ofstream file("paths.txt"); 
 
     if (file.is_open())
     {
-        for (int i = 1 ; i < paths.size(); i++)
+        for (int i = 0 ; i < paths.size(); i++)
         {
             file << paths[i] << endl;
         }
@@ -141,8 +151,7 @@ vector<string> storePaths(vector<string> &paths)
     }
     else
     {
+        // For debugging
         cerr << "Unable to open file: paths.txt" << endl;
     }
-
-    return paths;
 }
