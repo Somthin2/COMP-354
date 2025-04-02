@@ -12,6 +12,7 @@ using namespace std;
 
 // Function to read paths from paths.txt
 vector<string> readPaths();
+vector<string> storePaths(vector<string> &paths);
 
 int main(int argc, char *argv[])
 {
@@ -32,7 +33,7 @@ int main(int argc, char *argv[])
             stringstream ss(command);
             string arg;
             vector<string> args,paths = readPaths();
-            
+
             while (ss >> arg)
             {
                 args.push_back(arg);
@@ -58,8 +59,32 @@ int main(int argc, char *argv[])
                 }
                 else
                 {
+                    bool commandExecuted = false;
 
-                    cout<<"Wrong Input !"<<endl;
+                    for (const string &path : paths)
+                    {
+                        if (access((path + "/" + command).c_str(), X_OK) == 0)
+                        {
+                            int pid = fork();
+
+                            if (pid == 0)
+                            {
+                                execv((path + "/" + command).c_str(), 0);
+                                exit(0);
+                            }
+                            else if (pid > 0)
+                            {
+                                wait(NULL);
+                                commandExecuted = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (!commandExecuted)
+                    {
+                        cout << "Wrong Input !" << endl;
+                    }
                 }
                 
             }
@@ -97,6 +122,26 @@ vector<string> readPaths()
     {
         // For debugging
         cout << "Unable to open file: " << "paths.txt" << endl;
+    }
+
+    return paths;
+}
+
+vector<string> storePaths(vector<string> &paths)
+{
+    ofstream file("paths.txt"); 
+
+    if (file.is_open())
+    {
+        for (int i = 1 ; i < paths.size(); i++)
+        {
+            file << paths[i] << endl;
+        }
+        file.close();
+    }
+    else
+    {
+        cerr << "Unable to open file: paths.txt" << endl;
     }
 
     return paths;
