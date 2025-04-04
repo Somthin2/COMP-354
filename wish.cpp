@@ -26,6 +26,7 @@ int main(int argc, char *argv[])
         {
             cout << "wish> " ;
             string command;
+            int pid ;
 
             // Reads a line from stream into our String 
             getline(cin, command);
@@ -37,8 +38,24 @@ int main(int argc, char *argv[])
 
             while (ss >> arg)
             {
+                if (arg == "&")
+                {
+                    pid = fork();
+
+                    if (pid == 0)
+                    {
+                        args.clear();
+                        continue;
+                    }
+                    else if (pid > 0)
+                    {
+                        break;
+                    }
+                }
                 args.push_back(arg);
             }
+
+            cout << args[0] << endl;
 
             if(args[0] != "exit")
             {
@@ -142,6 +159,11 @@ int main(int argc, char *argv[])
             {
                 cout<<"Goodbye !"<<endl;
                 exit(0);
+            }
+
+            if(pid == 0)
+            {
+                exit(1);
             }
         }
         
