@@ -9,6 +9,7 @@
 #include <fstream>
 #include <algorithm>
 #include <fcntl.h>
+#include <sys/mman.h> 
 
 using namespace std;
 
@@ -16,9 +17,15 @@ using namespace std;
 vector<string> readPaths();
 void storePaths(vector<string> &paths,const string fileName);
 int isStringInVector(const vector<string> &vec, const string &str);
+void runCommandLineCommand(vector<string> &args);
+
 
 int main(int argc, char *argv[])
 {
+    // Create shared memory for the parent variable
+    int *parent = (int *)mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+    *parent = 0;
+
     // Check if no arguments are passed
     if (argc == 1)
     {
@@ -26,7 +33,7 @@ int main(int argc, char *argv[])
         {
             cout << "wish> " ;
             string command;
-            int pid ;
+            int pid;
 
             // Reads a line from stream into our String 
             getline(cin, command);
@@ -49,13 +56,13 @@ int main(int argc, char *argv[])
                     }
                     else if (pid > 0)
                     {
+                        if (*parent == 0) *parent = pid ;
+
                         break;
                     }
                 }
                 args.push_back(arg);
             }
-
-            cout << args[0] << endl;
 
             if(args[0] != "exit")
             {
@@ -68,7 +75,7 @@ int main(int argc, char *argv[])
                     }
                     else
                     {
-                        cout << chdir(args[1].c_str()) << endl ;
+                        chdir(args[1].c_str());
                     }
                 }
                 else if (args[0] == "path")
@@ -89,81 +96,29 @@ int main(int argc, char *argv[])
                 }
                 else
                 {
-                    bool commandExecuted = false;
+                    // Command line commands ?
+                    runCommandLineCommand(args);
+                    cout<<pid<<" ? " << *parent <<endl;
+                    if (pid != *parent) exit(0); //Time to go xD
 
-                    for (const string &path : paths)
+                    // Wait for all child processes to finish
+                    int status;
+                    while (waitpid(-1, &status, 0) > 0)
                     {
-                        if (access((path + "/" + args[0]).c_str(), X_OK) == 0)
-                        {
-                            int pid = fork();
-
-                            if (pid == 0)
-                            {
-                                int pos = isStringInVector(args,">");
-                                if (pos != -1)
-                                {
-                                    // Currenlty im assuming after > only one argument can be placed
-                                    if (args.size() - pos != 2)
-                                    {
-                                        cout<<"Invalid arguments"<<endl;
-                                        exit(1);
-                                    }
-                                    else
-                                    {
-                                       // Open the file for writing
-                                        int fd = open(args[pos + 1].c_str(), O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
-                                        if (fd < 0)
-                                        {
-                                            cerr << "Failed to open file: " << args[pos + 1] << endl;
-                                            exit(1);
-                                        }
-
-                                        // Redirect stdout to the file
-                                        dup2(fd, STDOUT_FILENO);
-                                        close(fd);
-
-                                        // Prepare arguments for execv
-                                        vector<char *> execArgs;
-                                        for (int i = 0; i < pos; ++i)
-                                        {
-                                            execArgs.push_back(const_cast<char *>(args[i].c_str()));
-                                        }
-                                        execArgs.push_back(nullptr);
-
-                                        execv((path + "/" + args[0]).c_str(), execArgs.data());
-                                        cerr << "Failed to execute command: " << args[0] << endl;
-                                        exit(1);
-                                    }
-                                }
-
-                                execv((path + "/" + command).c_str(), 0);
-                                exit(0);
-                            }
-                            else if (pid > 0)
-                            {
-                                wait(NULL);
-                                commandExecuted = true;
-                                break;
-                            }
-                        }
+                        // Optionally, you can handle the status here if needed
+                        cout << "Child process finished with status: " << status << endl;
                     }
 
-                    if (!commandExecuted)
-                    {
-                        cout << "Wrong Input !" << endl;
-                    }
+                    // Reset parent to 0 after all child processes are done
+                    *parent = 0;
                 }
+                
                 
             }
             else
             {
                 cout<<"Goodbye !"<<endl;
                 exit(0);
-            }
-
-            if(pid == 0)
-            {
-                exit(1);
             }
         }
         
@@ -179,7 +134,7 @@ int main(int argc, char *argv[])
 vector<string> readPaths()
 {
     vector<string> paths;
-    ifstream file("paths.txt");
+    ifstream file("/workspaces/COMP-354/paths.txt");
     string line;
 
     if (file.is_open())
@@ -193,7 +148,7 @@ vector<string> readPaths()
     else
     {
         // For debugging
-        cout << "Unable to open file: " << "paths.txt" << endl;
+        cout << "Unable to open file: " << "/workspaces/COMP-354/paths.txt" << endl;
     }
 
     return paths;
@@ -229,4 +184,75 @@ int isStringInVector(const vector<string> &vec, const string &str)
     {
         return -1; 
     }
+}
+
+void runCommandLineCommand(vector<string> &args)
+{
+    bool commandExecuted = false;
+    vector<string> paths = readPaths();
+
+                    for (const string &path : paths)
+                    {
+                        if (commandExecuted == true) break;
+
+                        else if (access((path + "/" + args[0]).c_str(), X_OK) == 0)
+                        {
+                            int pid = fork();
+
+                            if (pid == 0)
+                            {
+                                int pos = isStringInVector(args,">");
+                                if (pos != -1)
+                                {
+                                    // Currenlty im assuming after > only one argument can be placed
+                                    if (args.size() - pos != 2)
+                                    {
+                                        cout<<"Invalid arguments"<<endl;
+                                        exit(1);
+                                    }
+                                    else
+                                    {
+                                       // Open the file for writing
+                                        int fd = open(args[pos + 1].c_str(), O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
+                                        if (fd < 0)
+                                        {
+                                            cerr << "Failed to open file: " << args[pos + 1] << endl;
+                                            exit(1);
+                                        }
+
+                                        // Redirect stdout to the file
+                                        dup2(fd, STDOUT_FILENO);
+                                        close(fd);
+
+                                        execv((path + "/" + args[0]).c_str(),0);
+                                        cerr << "Failed to execute command: " << args[0] << endl;
+                                        exit(1);
+                                    }
+                                    exit(0);
+                                }
+                                vector<char *> execArgs;
+
+                                for (int i = 0; i < args.size(); ++i)
+                                {
+                                    execArgs.push_back(const_cast<char *>(args[i].c_str()));
+                                }
+                                execArgs.push_back(nullptr);
+                                
+                                execv((path + "/" + args[0]).c_str(), execArgs.data());
+                                exit(0);
+                            }
+                            else if (pid > 0)
+                            {
+                                wait(NULL);
+                                commandExecuted = true;
+                                continue;
+                            }
+                        }
+                    }
+
+                    if (!commandExecuted)
+                    {
+                        cout << "Wrong Input !" << endl;
+                    }
+                
 }
