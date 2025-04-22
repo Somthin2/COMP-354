@@ -99,7 +99,7 @@ int main(int argc, char *argv[])
                     // Command line commands ?
                     runCommandLineCommand(args);
                     cout<<pid<<" ? " << *parent <<endl;
-                    if (pid != *parent) exit(0); //Time to go xD
+                    if (*parent != 0 && pid != *parent) exit(0); //Time to go xD
 
                     // Wait for all child processes to finish
                     int status;
@@ -191,68 +191,85 @@ void runCommandLineCommand(vector<string> &args)
     bool commandExecuted = false;
     vector<string> paths = readPaths();
 
-                    for (const string &path : paths)
-                    {
-                        if (commandExecuted == true) break;
+    if (args.empty()) {
+        cerr << "No command provided!" << endl;
+        return;
+    }
 
-                        else if (access((path + "/" + args[0]).c_str(), X_OK) == 0)
+    // Convert vector<string> to char* array for execvp
+    
+
+
+        for (const string &path : paths)
+        {
+            if (commandExecuted == true) break;
+
+            else if (access((path + "/" + args[0]).c_str(), X_OK) == 0)
+            {
+                int pid = fork();
+
+                if (pid == 0)
+                {
+                    int pos = isStringInVector(args,">");
+
+                    vector<char*> c_args;
+                    for (const auto& arg : args) {
+                        c_args.push_back(const_cast<char*>(arg.c_str()));
+                    }
+                    c_args.push_back(nullptr); // Null-terminate the array                
+                    
+                    if (pos != -1)
+                    {
+                        // Currenlty im assuming after > only one argument can be placed
+                        if (args.size() - pos != 2)
                         {
-                            int pid = fork();
-
-                            if (pid == 0)
-                            {
-                                int pos = isStringInVector(args,">");
-                                if (pos != -1)
-                                {
-                                    // Currenlty im assuming after > only one argument can be placed
-                                    if (args.size() - pos != 2)
-                                    {
-                                        cout<<"Invalid arguments"<<endl;
-                                        exit(1);
-                                    }
-                                    else
-                                    {
-                                       // Open the file for writing
-                                        int fd = open(args[pos + 1].c_str(), O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
-                                        if (fd < 0)
-                                        {
-                                            cerr << "Failed to open file: " << args[pos + 1] << endl;
-                                            exit(1);
-                                        }
-
-                                        // Redirect stdout to the file
-                                        dup2(fd, STDOUT_FILENO);
-                                        close(fd);
-
-                                        execv((path + "/" + args[0]).c_str(),0);
-                                        cerr << "Failed to execute command: " << args[0] << endl;
-                                        exit(1);
-                                    }
-                                    exit(0);
-                                }
-                                vector<char *> execArgs;
-
-                                for (int i = 0; i < args.size(); ++i)
-                                {
-                                    execArgs.push_back(const_cast<char *>(args[i].c_str()));
-                                }
-                                execArgs.push_back(nullptr);
-                                
-                                execv((path + "/" + args[0]).c_str(), execArgs.data());
-                                exit(0);
-                            }
-                            else if (pid > 0)
-                            {
-                                wait(NULL);
-                                commandExecuted = true;
-                                continue;
-                            }
+                            cout<<"Invalid arguments"<<endl;
+                            exit(1);
                         }
-                    }
+                        else
+                        {
+                            // Open the file for writing
+                            int fd = open(args[pos + 1].c_str(), O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
+                            if (fd < 0)
+                            {
+                                cerr << "Failed to open file: " << args[pos + 1] << endl;
+                                exit(1);
+                            }
 
-                    if (!commandExecuted)
-                    {
-                        cout << "Wrong Input !" << endl;
+                            // Redirect stdout to the file
+                            dup2(fd, STDOUT_FILENO);
+                            close(fd);
+
+                            if (execvp(c_args[0], c_args.data()) == -1) 
+                            {
+                                perror("execvp failed");
+                                exit(EXIT_FAILURE); // Exit if execvp fails
+                            }                            
+                        }
+                        exit(0);
                     }
-                
+                    
+                    
+                    if (execvp(c_args[0], c_args.data()) == -1) 
+                    {
+                        perror("execvp failed");
+                        exit(EXIT_FAILURE); // Exit if execvp fails
+                    }                    
+                    exit(0);
+                }
+                else if (pid > 0)
+                {
+                    wait(NULL);
+                    commandExecuted = true;
+                    continue;
+                }
+            }
+        }
+
+        if (!commandExecuted)
+        {
+            cout << "Wrong Input !" << endl;
+        }
+    
+
 }
