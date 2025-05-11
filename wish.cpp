@@ -26,107 +26,135 @@ int main(int argc, char *argv[])
     int *parent = (int *)mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
     *parent = 0;
 
-    // Check if no arguments are passed
-    if (argc == 1)
+    while(true)
     {
-        while(true)
+        string command;
+        int pid;
+
+        if (argc == 1)
         {
             cout << "wish> " ;
-            string command;
-            int pid;
 
             // Reads a line from stream into our String 
+
             getline(cin, command);
-            
-            // Split the command into arguments
-            stringstream ss(command);
-            string arg;
-            vector<string> args,paths = readPaths();
 
-            while (ss >> arg)
+            if (command.empty())
             {
-                if (arg == "&")
-                {
-                    pid = fork();
-
-                    if (pid == 0)
-                    {
-                        args.clear();
-                        continue;
-                    }
-                    else if (pid > 0)
-                    {
-                        if (*parent == 0) *parent = pid ;
-
-                        break;
-                    }
-                }
-                args.push_back(arg);
+                continue;
+            }
+        }        
+        else if (argc >= 2)
+        {
+            ifstream inputFile(argv[1]);
+            if (!inputFile.is_open())
+            {
+                cerr << "Error: Could not open file " << argv[1] << endl;
+                return 1;
             }
 
-            if(args[0] != "exit")
+            string command;
+            while (getline(inputFile, command))
             {
-                if (args[0] == "cd")
+                if (command.empty()) continue;
+
+                // Process the command (same as interactive mode)
+                stringstream ss(command);
+                vector<string> args;
+                string arg;
+                while (ss >> arg)
                 {
-                    if (args.size() != 2)
-                    {
-                        cout<<"Invalid Command"<<endl;
-                        continue;
-                    }
-                    else
-                    {
-                        chdir(args[1].c_str());
-                    }
+                    args.push_back(arg);
+                    cout<<arg<<endl; 
                 }
-                else if (args[0] == "path")
+
+            }
+
+            inputFile.close();
+        }
+
+        // Split the command into arguments
+        stringstream ss(command);
+        string arg;
+        vector<string> args,paths = readPaths();
+
+        while (ss >> arg)
+        {
+            if (arg == "&")
+            {
+                pid = fork();
+
+                if (pid == 0)
                 {
-                    paths.clear();
+                    args.clear();
+                    continue;
+                }
+                else if (pid > 0)
+                {
+                    if (*parent == 0) *parent = pid ;
 
-                    for (int i = 1 ; i < args.size(); i++)
-                    {
-                        // This will store them for now in the paths vector but this is only temporary
-                        paths.push_back(args[i]);
-                    }
+                    break;
+                }
+            }
+            args.push_back(arg);
+        }
 
-                    // maybe can split the task here ask so you know
-
-                    storePaths(paths, "paths.txt");
-
-                    cout<<"Paths have been updated"<<endl;
+        if(args[0] != "exit")
+        {
+            if (args[0] == "cd")
+            {
+                if (args.size() != 2)
+                {
+                    cout<<"Invalid Command"<<endl;
+                    continue;
                 }
                 else
                 {
-                    // Command line commands ?
-                    runCommandLineCommand(args);
-                    cout<<pid<<" ? " << *parent <<endl;
-                    if (*parent != 0 && pid != *parent) exit(0); //Time to go xD
-
-                    // Wait for all child processes to finish
-                    int status;
-                    while (waitpid(-1, &status, 0) > 0)
-                    {
-                        // Optionally, you can handle the status here if needed
-                        cout << "Child process finished with status: " << status << endl;
-                    }
-
-                    // Reset parent to 0 after all child processes are done
-                    *parent = 0;
+                    chdir(args[1].c_str());
                 }
-                
-                
+            }
+            else if (args[0] == "path")
+            {
+                paths.clear();
+
+                for (int i = 1 ; i < args.size(); i++)
+                {
+                    // This will store them for now in the paths vector but this is only temporary
+                    paths.push_back(args[i]);
+                }
+
+                // maybe can split the task here ask so you know
+
+                storePaths(paths, "paths.txt");
+
+                cout<<"Paths have been updated"<<endl;
             }
             else
             {
-                cout<<"Goodbye !"<<endl;
-                exit(0);
+                // Command line commands
+                runCommandLineCommand(args);
+                cout<<pid<<" ? " << *parent <<endl;
+                if (*parent != 0 && pid != *parent) exit(0); //Time to go xD
+
+                // Wait for all child processes to finish
+                int status;
+                while (waitpid(-1, &status, 0) > 0)
+                {
+                    // Optionally, you can handle the status here if needed
+                    cout << "Child process finished with status: " << status << endl;
+                }
+
+                // Reset parent to 0 after all child processes are done
+                *parent = 0;
             }
+            
+            
         }
-        
-    }
-    // Check if one or more arguments are passed
-    else if (argc >= 2)
-    {
-        cout << "Just started by passing variables" << endl;
+        else
+        {
+            cout<<"Goodbye !"<<endl;
+            exit(0);
+        }
     }
     return 0;
 }
@@ -195,10 +223,7 @@ void runCommandLineCommand(vector<string> &args)
         cerr << "No command provided!" << endl;
         return;
     }
-
     // Convert vector<string> to char* array for execvp
-    
-
 
         for (const string &path : paths)
         {
@@ -270,6 +295,4 @@ void runCommandLineCommand(vector<string> &args)
         {
             cout << "Wrong Input !" << endl;
         }
-    
-
 }
