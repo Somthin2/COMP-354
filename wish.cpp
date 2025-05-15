@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <fcntl.h>
 #include <sys/mman.h> 
+#include <string>
 
 using namespace std;
 
@@ -67,7 +68,10 @@ int main(int argc, char *argv[])
                     temp += arg + " ";
                     args.push_back(arg);
                 }
-                cout<<temp<<endl;
+
+
+                temp.erase(std::remove(temp.begin(), temp.end(), ' '), temp.end());               
+                if (temp == "") continue;
 
                 if (args[0] == "exit") 
                 {
