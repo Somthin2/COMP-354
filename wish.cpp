@@ -61,15 +61,25 @@ int main(int argc, char *argv[])
                 // Process the command (same as interactive mode)
                 stringstream ss(command);
                 vector<string> args;
-                string arg;
+                string arg,temp="";
                 while (ss >> arg)
                 {
+                    temp += arg + " ";
                     args.push_back(arg);
-                    cout<<arg<<endl; 
                 }
+                cout<<temp<<endl;
 
+                if (args[0] == "exit") 
+                {
+                    cout<<"GoodBye !"<<endl;
+                    exit(0);
+                }
+                runCommandLineCommand(args);
+                temp="";
+                args.clear();
             }
-
+        
+            //runCommandLineCommand(args);
             inputFile.close();
         }
 
@@ -293,6 +303,38 @@ void runCommandLineCommand(vector<string> &args)
 
         if (!commandExecuted)
         {
+            if(args[0] != "exit")
+            {
+                if (args[0] == "cd")
+                {
+                if (args.size() != 2)
+                {
+                    cout<<"Invalid Command"<<endl;
+            
+                }
+                else
+                {
+                    chdir(args[1].c_str());
+                }
+            }
+            else if (args[0] == "path")
+            {
+                paths.clear();
+
+                for (int i = 1 ; i < args.size(); i++)
+                {
+                    // This will store them for now in the paths vector but this is only temporary
+                    paths.push_back(args[i]);
+                }
+
+                // maybe can split the task here ask so you know
+
+                storePaths(paths, "paths.txt");
+
+                cout<<"Paths have been updated"<<endl;
+            }
+
             cout << "Wrong Input !" << endl;
+            }
         }
 }
