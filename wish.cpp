@@ -10,7 +10,7 @@
  * - Handle batch script execution from files
  * - Support background processes using "&"
  *
- * @author Not specified
+ * @author Athanasios Pavlides
  * @date May 2025
  */
 
