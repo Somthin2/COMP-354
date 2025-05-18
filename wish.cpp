@@ -1,3 +1,19 @@
+/**
+ * @file wish.cpp
+ * @brief A simple shell implementation with basic command execution capabilities
+ *
+ * This program implements a basic shell ("wish") that can:
+ * - Execute commands from standard paths
+ * - Handle path management via the "path" command
+ * - Support changing directories with "cd"
+ * - Support output redirection with ">"
+ * - Handle batch script execution from files
+ * - Support background processes using "&"
+ *
+ * @author Not specified
+ * @date May 2025
+ */
+
 #include <iostream>
 #include <sstream>
 #include <vector>
@@ -14,13 +30,59 @@
 
 using namespace std;
 
-// Function to read paths from paths.txt
+/**
+ * @brief Reads command paths from a configuration file
+ * 
+ * Reads system paths from a "paths.txt" file, where each line contains one path.
+ * These paths are used to locate executable commands.
+ *
+ * @return A vector of strings containing all the paths read from the file
+ */
 vector<string> readPaths();
-void storePaths(vector<string> &paths,const string fileName);
+
+/**
+ * @brief Stores path information to a configuration file
+ * 
+ * Writes the current set of paths to the specified file, one path per line.
+ * This maintains path persistence between shell sessions.
+ *
+ * @param paths The vector of paths to be stored
+ * @param fileName The name of the file to write the paths to
+ */
+void storePaths(vector<string> &paths, const string fileName);
+
+/**
+ * @brief Searches for a string in a vector and returns its index
+ *
+ * Checks if a given string exists in a vector and returns its position.
+ * Commonly used to find special characters or commands in the arguments list.
+ *
+ * @param vec The vector to search in
+ * @param str The string to search for
+ * @return The index of the string if found, -1 otherwise
+ */
 int isStringInVector(const vector<string> &vec, const string &str);
+
+/**
+ * @brief Executes a command with its arguments
+ *
+ * Takes a vector of arguments, looks for the executable in the defined paths,
+ * and executes it if found. Handles output redirection and special shell commands.
+ *
+ * @param args Vector of strings where the first element is the command and subsequent elements are arguments
+ */
 void runCommandLineCommand(vector<string> &args);
 
-
+/**
+ * @brief Main function of the shell
+ *
+ * Initializes the shell, processes user commands, and handles batch script execution.
+ * Creates a shared memory space for tracking the parent process.
+ *
+ * @param argc Number of command line arguments
+ * @param argv Array of command line arguments
+ * @return Exit status of the program
+ */
 int main(int argc, char *argv[])
 {
     // Create shared memory for the parent variable
@@ -34,10 +96,10 @@ int main(int argc, char *argv[])
 
         if (argc == 1)
         {
+            // Interactive mode
             cout << "wish> " ;
 
             // Reads a line from stream into our String 
-
             getline(cin, command);
 
             if (command.empty())
@@ -47,6 +109,7 @@ int main(int argc, char *argv[])
         }        
         else if (argc >= 2)
         {
+            // Batch mode - execute commands from a file
             ifstream inputFile(argv[1]);
             if (!inputFile.is_open())
             {
@@ -69,7 +132,7 @@ int main(int argc, char *argv[])
                     args.push_back(arg);
                 }
 
-
+                // Remove all spaces for empty command check
                 temp.erase(std::remove(temp.begin(), temp.end(), ' '), temp.end());               
                 if (temp == "") continue;
 
@@ -83,7 +146,6 @@ int main(int argc, char *argv[])
                 args.clear();
             }
         
-            //runCommandLineCommand(args);
             inputFile.close();
         }
 
@@ -96,15 +158,18 @@ int main(int argc, char *argv[])
         {
             if (arg == "&")
             {
+                // Handle background process
                 pid = fork();
 
                 if (pid == 0)
                 {
+                    // Child process
                     args.clear();
                     continue;
                 }
                 else if (pid > 0)
                 {
+                    // Parent process
                     if (*parent == 0) *parent = pid ;
 
                     break;
@@ -117,6 +182,7 @@ int main(int argc, char *argv[])
         {
             if (args[0] == "cd")
             {
+                // Handle change directory command
                 if (args.size() != 2)
                 {
                     cout<<"Invalid Command"<<endl;
@@ -129,43 +195,42 @@ int main(int argc, char *argv[])
             }
             else if (args[0] == "path")
             {
+                // Handle path command
                 paths.clear();
 
                 for (int i = 1 ; i < args.size(); i++)
                 {
-                    // This will store them for now in the paths vector but this is only temporary
+                    // Store new paths in the paths vector
                     paths.push_back(args[i]);
                 }
 
-                // maybe can split the task here ask so you know
-
+                // Save the updated paths to the file
                 storePaths(paths, "paths.txt");
 
                 cout<<"Paths have been updated"<<endl;
             }
             else
             {
-                // Command line commands
+                // Execute external command
                 runCommandLineCommand(args);
                 cout<<pid<<" ? " << *parent <<endl;
-                if (*parent != 0 && pid != *parent) exit(0); //Time to go xD
+                if (*parent != 0 && pid != *parent) exit(0); // Exit child process
 
                 // Wait for all child processes to finish
                 int status;
                 while (waitpid(-1, &status, 0) > 0)
                 {
-                    // Optionally, you can handle the status here if needed
+                    // Process child termination status
                     cout << "Child process finished with status: " << status << endl;
                 }
 
                 // Reset parent to 0 after all child processes are done
                 *parent = 0;
             }
-            
-            
         }
         else
         {
+            // Exit shell
             cout<<"Goodbye !"<<endl;
             exit(0);
         }
@@ -173,6 +238,15 @@ int main(int argc, char *argv[])
     return 0;
 }
 
+/**
+ * @brief Reads paths from the paths.txt configuration file
+ *
+ * Opens and reads the paths.txt file, loading each line as a separate path
+ * into a vector of strings. Each path represents a directory to search for
+ * executable commands.
+ *
+ * @return Vector of paths read from the configuration file
+ */
 vector<string> readPaths()
 {
     vector<string> paths;
@@ -196,6 +270,15 @@ vector<string> readPaths()
     return paths;
 }
 
+/**
+ * @brief Stores the current paths to the specified file
+ *
+ * Writes each path in the provided vector to a file, one path per line.
+ * This allows path settings to persist between shell sessions.
+ *
+ * @param paths Vector of paths to store
+ * @param fileName Name of the file to write to
+ */
 void storePaths(vector<string> &paths,const string fileName)
 {
     ofstream file(fileName); 
@@ -215,6 +298,16 @@ void storePaths(vector<string> &paths,const string fileName)
     }
 }
 
+/**
+ * @brief Finds a string in a vector and returns its position
+ *
+ * Searches for a string in a vector and returns its index if found.
+ * Used to locate special operators or arguments in the command line.
+ *
+ * @param vec Vector to search in
+ * @param str String to find
+ * @return Index of the string if found, -1 otherwise
+ */
 int isStringInVector(const vector<string> &vec, const string &str)
 {
     auto it = find(vec.begin(), vec.end(), str);
@@ -228,6 +321,15 @@ int isStringInVector(const vector<string> &vec, const string &str)
     }
 }
 
+/**
+ * @brief Executes a command with arguments
+ *
+ * Takes a command and its arguments, searches for the executable in the paths,
+ * and executes it if found. Handles output redirection with ">" operator.
+ * For built-in commands like "cd" and "path", the function delegates to the main loop.
+ *
+ * @param args Vector containing the command and its arguments
+ */
 void runCommandLineCommand(vector<string> &args)
 {
     bool commandExecuted = false;
@@ -249,8 +351,10 @@ void runCommandLineCommand(vector<string> &args)
 
                 if (pid == 0)
                 {
+                    // Check for redirection operator
                     int pos = isStringInVector(args,">");
 
+                    // Convert string arguments to char* for execvp
                     vector<char*> c_args;
                     for (const auto& arg : args) {
                         c_args.push_back(const_cast<char*>(arg.c_str()));
@@ -259,7 +363,8 @@ void runCommandLineCommand(vector<string> &args)
                     
                     if (pos != -1)
                     {
-                        // Currenlty im assuming after > only one argument can be placed
+                        // Handle output redirection
+                        // Currently assuming only one argument after ">"
                         if (args.size() - pos != 2)
                         {
                             cout<<"Invalid arguments"<<endl;
@@ -288,7 +393,7 @@ void runCommandLineCommand(vector<string> &args)
                         exit(0);
                     }
                     
-                    
+                    // Execute the command
                     if (execvp(c_args[0], c_args.data()) == -1) 
                     {
                         perror("execvp failed");
@@ -298,6 +403,7 @@ void runCommandLineCommand(vector<string> &args)
                 }
                 else if (pid > 0)
                 {
+                    // Parent process waits for child
                     wait(NULL);
                     commandExecuted = true;
                     continue;
@@ -311,34 +417,38 @@ void runCommandLineCommand(vector<string> &args)
             {
                 if (args[0] == "cd")
                 {
-                if (args.size() != 2)
+                    // Handle built-in cd command
+                    if (args.size() != 2)
+                    {
+                        cout<<"Invalid Command"<<endl;
+                
+                    }
+                    else
+                    {
+                        chdir(args[1].c_str());
+                    }
+                }
+                else if (args[0] == "path")
                 {
-                    cout<<"Invalid Command"<<endl;
-            
+                    // Handle built-in path command
+                    paths.clear();
+
+                    for (int i = 1 ; i < args.size(); i++)
+                    {
+                        // Store new paths
+                        paths.push_back(args[i]);
+                    }
+
+                    // Save paths to file
+                    storePaths(paths, "paths.txt");
+
+                    cout<<"Paths have been updated"<<endl;
                 }
                 else
                 {
-                    chdir(args[1].c_str());
+                    // Command not found
+                    cout << "Wrong Input !" << endl;
                 }
-            }
-            else if (args[0] == "path")
-            {
-                paths.clear();
-
-                for (int i = 1 ; i < args.size(); i++)
-                {
-                    // This will store them for now in the paths vector but this is only temporary
-                    paths.push_back(args[i]);
-                }
-
-                // maybe can split the task here ask so you know
-
-                storePaths(paths, "paths.txt");
-
-                cout<<"Paths have been updated"<<endl;
-            }
-
-            cout << "Wrong Input !" << endl;
             }
         }
 }
