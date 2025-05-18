@@ -245,7 +245,7 @@ int main(int argc, char *argv[])
             {
                 // Execute external command
                 runCommandLineCommand(args);
-                cout << pid << " ? " << *parent << endl;
+                // cout << pid << " ? " << *parent << endl;
                 if (*parent != 0 && pid != *parent) exit(EXIT_SUCCESS_CODE); // Exit child process
 
                 // Wait for all child processes to finish
@@ -253,7 +253,7 @@ int main(int argc, char *argv[])
                 while (waitpid(-1, &status, 0) > 0)
                 {
                     // Process child termination status
-                    cout << "Child process finished with status: " << status << endl;
+                    // cout << "Child process finished with status: " << status << endl;
                 }
 
                 // Reset parent to 0 after all child processes are done
