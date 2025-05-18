@@ -1,0 +1,289 @@
+\hypertarget{wish_8cpp}{}\doxysection{wish.\+cpp File Reference}
+\label{wish_8cpp}\index{wish.cpp@{wish.cpp}}
+
+
+A simple shell implementation with basic command execution capabilities.  
+
+
+{\ttfamily \#include $<$iostream$>$}\newline
+{\ttfamily \#include $<$sstream$>$}\newline
+{\ttfamily \#include $<$vector$>$}\newline
+{\ttfamily \#include $<$cstring$>$}\newline
+{\ttfamily \#include $<$unistd.\+h$>$}\newline
+{\ttfamily \#include $<$stdlib.\+h$>$}\newline
+{\ttfamily \#include $<$stddef.\+h$>$}\newline
+{\ttfamily \#include $<$sys/wait.\+h$>$}\newline
+{\ttfamily \#include $<$fstream$>$}\newline
+{\ttfamily \#include $<$algorithm$>$}\newline
+{\ttfamily \#include $<$fcntl.\+h$>$}\newline
+{\ttfamily \#include $<$sys/mman.\+h$>$}\newline
+{\ttfamily \#include $<$string$>$}\newline
+Include dependency graph for wish.\+cpp\+:
+% FIG 0
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+vector$<$ string $>$ \mbox{\hyperlink{wish_8cpp_ad0d709b63670bd4165abd0ee4a81fe8c}{read\+Paths}} ()
+\begin{DoxyCompactList}\small\item\em Reads command paths from a configuration file. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{wish_8cpp_a411b7b04eef75c4b3062ef5d7089ef5c}{store\+Paths}} (const vector$<$ string $>$ \&paths, const string \&file\+Name)
+\begin{DoxyCompactList}\small\item\em Stores path information to a configuration file. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{wish_8cpp_ace55b70f480bab63869b2926f7d74975}{is\+String\+In\+Vector}} (const vector$<$ string $>$ \&vec, const string \&str)
+\begin{DoxyCompactList}\small\item\em Searches for a string in a vector and returns its index. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{wish_8cpp_ab31234aa1fe8cb61752fec9dfb976d8e}{run\+Command\+Line\+Command}} (vector$<$ string $>$ \&args)
+\begin{DoxyCompactList}\small\item\em Executes a command with its arguments. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{wish_8cpp_a0ddf1224851353fc92bfbff6f499fa97}{main}} (int argc, char $\ast$argv\mbox{[}$\,$\mbox{]})
+\begin{DoxyCompactList}\small\item\em Main function of the shell. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+constexpr const char $\ast$ \mbox{\hyperlink{wish_8cpp_ad2aca686bc2b0314313da74416295e13}{D\+E\+F\+A\+U\+L\+T\+\_\+\+P\+A\+T\+H\+S\+\_\+\+F\+I\+LE}} = \char`\"{}/workspaces/C\+O\+MP-\/354/paths.\+txt\char`\"{}
+\item 
+constexpr const char $\ast$ \mbox{\hyperlink{wish_8cpp_acb933c895b0fba41e8f6bd58b0d5eedb}{P\+R\+O\+M\+PT}} = \char`\"{}wish$>$ \char`\"{}
+\item 
+constexpr const char $\ast$ \mbox{\hyperlink{wish_8cpp_a4b8aa27a43fcbe1af2fa4b2ca223c7d5}{E\+X\+I\+T\+\_\+\+C\+O\+M\+M\+A\+ND}} = \char`\"{}exit\char`\"{}
+\item 
+constexpr const char $\ast$ \mbox{\hyperlink{wish_8cpp_a09b55e9c1dd399e2c349a95fc528853f}{C\+D\+\_\+\+C\+O\+M\+M\+A\+ND}} = \char`\"{}cd\char`\"{}
+\item 
+constexpr const char $\ast$ \mbox{\hyperlink{wish_8cpp_a22566d1abec4431d22bfa315e8591d81}{P\+A\+T\+H\+\_\+\+C\+O\+M\+M\+A\+ND}} = \char`\"{}path\char`\"{}
+\item 
+constexpr const char $\ast$ \mbox{\hyperlink{wish_8cpp_a79d8afb5d6fa51c4b28ef7bba496fc8e}{R\+E\+D\+I\+R\+E\+C\+T\+\_\+\+O\+P\+E\+R\+A\+T\+OR}} = \char`\"{}$>$\char`\"{}
+\item 
+constexpr const char $\ast$ \mbox{\hyperlink{wish_8cpp_a878b4dafe64b859b106cda58946fd9f2}{B\+A\+C\+K\+G\+R\+O\+U\+N\+D\+\_\+\+O\+P\+E\+R\+A\+T\+OR}} = \char`\"{}\&\char`\"{}
+\item 
+constexpr int \mbox{\hyperlink{wish_8cpp_af7b8c42f161ac9cd66d0eb64332fabf9}{C\+O\+M\+M\+A\+N\+D\+\_\+\+N\+O\+T\+\_\+\+F\+O\+U\+ND}} = -\/1
+\item 
+constexpr int \mbox{\hyperlink{wish_8cpp_a77072842d0b5bb012e91e2e91d718e62}{E\+X\+I\+T\+\_\+\+S\+U\+C\+C\+E\+S\+S\+\_\+\+C\+O\+DE}} = 0
+\item 
+constexpr int \mbox{\hyperlink{wish_8cpp_aed67ec15432a232f19a16de868322288}{E\+X\+I\+T\+\_\+\+F\+A\+I\+L\+U\+R\+E\+\_\+\+C\+O\+DE}} = 1
+\item 
+constexpr mode\+\_\+t \mbox{\hyperlink{wish_8cpp_ad39583ac4359318f1d0b3684dcde2584}{F\+I\+L\+E\+\_\+\+P\+E\+R\+M\+I\+S\+S\+I\+O\+NS}} = S\+\_\+\+I\+R\+U\+SR $\vert$ S\+\_\+\+I\+W\+U\+SR
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+A simple shell implementation with basic command execution capabilities. 
+
+This program implements a basic shell (\char`\"{}wish\char`\"{}) that can\+:
+\begin{DoxyItemize}
+\item Execute commands from standard paths
+\item Handle path management via the \char`\"{}path\char`\"{} command
+\item Support changing directories with \char`\"{}cd\char`\"{}
+\item Support output redirection with \char`\"{}$>$\char`\"{}
+\item Handle batch script execution from files
+\item Support background processes using \char`\"{}\&\char`\"{}
+\end{DoxyItemize}
+
+\begin{DoxyAuthor}{Author}
+Not specified 
+\end{DoxyAuthor}
+\begin{DoxyDate}{Date}
+May 2025 
+\end{DoxyDate}
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{wish_8cpp_ace55b70f480bab63869b2926f7d74975}\label{wish_8cpp_ace55b70f480bab63869b2926f7d74975}} 
+\index{wish.cpp@{wish.cpp}!isStringInVector@{isStringInVector}}
+\index{isStringInVector@{isStringInVector}!wish.cpp@{wish.cpp}}
+\doxysubsubsection{\texorpdfstring{isStringInVector()}{isStringInVector()}}
+{\footnotesize\ttfamily int is\+String\+In\+Vector (\begin{DoxyParamCaption}\item[{const vector$<$ string $>$ \&}]{vec,  }\item[{const string \&}]{str }\end{DoxyParamCaption})}
+
+
+
+Searches for a string in a vector and returns its index. 
+
+Finds a string in a vector and returns its position.
+
+Checks if a given string exists in a vector and returns its position. Commonly used to find special characters or commands in the arguments list.
+
+
+\begin{DoxyParams}{Parameters}
+{\em vec} & The vector to search in \\
+\hline
+{\em str} & The string to search for \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+The index of the string if found, -\/1 otherwise
+\end{DoxyReturn}
+Searches for a string in a vector and returns its index if found. Used to locate special operators or arguments in the command line.
+
+
+\begin{DoxyParams}{Parameters}
+{\em vec} & Vector to search in \\
+\hline
+{\em str} & String to find \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Index of the string if found, -\/1 otherwise 
+\end{DoxyReturn}
+\mbox{\Hypertarget{wish_8cpp_a0ddf1224851353fc92bfbff6f499fa97}\label{wish_8cpp_a0ddf1224851353fc92bfbff6f499fa97}} 
+\index{wish.cpp@{wish.cpp}!main@{main}}
+\index{main@{main}!wish.cpp@{wish.cpp}}
+\doxysubsubsection{\texorpdfstring{main()}{main()}}
+{\footnotesize\ttfamily int main (\begin{DoxyParamCaption}\item[{int}]{argc,  }\item[{char $\ast$}]{argv\mbox{[}$\,$\mbox{]} }\end{DoxyParamCaption})}
+
+
+
+Main function of the shell. 
+
+Initializes the shell, processes user commands, and handles batch script execution. Creates a shared memory space for tracking the parent process.
+
+
+\begin{DoxyParams}{Parameters}
+{\em argc} & Number of command line arguments \\
+\hline
+{\em argv} & Array of command line arguments \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Exit status of the program 
+\end{DoxyReturn}
+\mbox{\Hypertarget{wish_8cpp_ad0d709b63670bd4165abd0ee4a81fe8c}\label{wish_8cpp_ad0d709b63670bd4165abd0ee4a81fe8c}} 
+\index{wish.cpp@{wish.cpp}!readPaths@{readPaths}}
+\index{readPaths@{readPaths}!wish.cpp@{wish.cpp}}
+\doxysubsubsection{\texorpdfstring{readPaths()}{readPaths()}}
+{\footnotesize\ttfamily vector$<$ string $>$ read\+Paths (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Reads command paths from a configuration file. 
+
+Reads paths from the paths.\+txt configuration file.
+
+Reads system paths from a \char`\"{}paths.\+txt\char`\"{} file, where each line contains one path. These paths are used to locate executable commands.
+
+\begin{DoxyReturn}{Returns}
+A vector of strings containing all the paths read from the file
+\end{DoxyReturn}
+Opens and reads the paths.\+txt file, loading each line as a separate path into a vector of strings. Each path represents a directory to search for executable commands.
+
+\begin{DoxyReturn}{Returns}
+Vector of paths read from the configuration file 
+\end{DoxyReturn}
+\mbox{\Hypertarget{wish_8cpp_ab31234aa1fe8cb61752fec9dfb976d8e}\label{wish_8cpp_ab31234aa1fe8cb61752fec9dfb976d8e}} 
+\index{wish.cpp@{wish.cpp}!runCommandLineCommand@{runCommandLineCommand}}
+\index{runCommandLineCommand@{runCommandLineCommand}!wish.cpp@{wish.cpp}}
+\doxysubsubsection{\texorpdfstring{runCommandLineCommand()}{runCommandLineCommand()}}
+{\footnotesize\ttfamily void run\+Command\+Line\+Command (\begin{DoxyParamCaption}\item[{vector$<$ string $>$ \&}]{args }\end{DoxyParamCaption})}
+
+
+
+Executes a command with its arguments. 
+
+Executes a command with arguments.
+
+Takes a vector of arguments, looks for the executable in the defined paths, and executes it if found. Handles output redirection and special shell commands.
+
+
+\begin{DoxyParams}{Parameters}
+{\em args} & Vector of strings where the first element is the command and subsequent elements are arguments\\
+\hline
+\end{DoxyParams}
+Takes a command and its arguments, searches for the executable in the paths, and executes it if found. Handles output redirection with \char`\"{}$>$\char`\"{} operator. For built-\/in commands like \char`\"{}cd\char`\"{} and \char`\"{}path\char`\"{}, the function delegates to the main loop.
+
+
+\begin{DoxyParams}{Parameters}
+{\em args} & Vector containing the command and its arguments \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{wish_8cpp_a411b7b04eef75c4b3062ef5d7089ef5c}\label{wish_8cpp_a411b7b04eef75c4b3062ef5d7089ef5c}} 
+\index{wish.cpp@{wish.cpp}!storePaths@{storePaths}}
+\index{storePaths@{storePaths}!wish.cpp@{wish.cpp}}
+\doxysubsubsection{\texorpdfstring{storePaths()}{storePaths()}}
+{\footnotesize\ttfamily void store\+Paths (\begin{DoxyParamCaption}\item[{const vector$<$ string $>$ \&}]{paths,  }\item[{const string \&}]{file\+Name }\end{DoxyParamCaption})}
+
+
+
+Stores path information to a configuration file. 
+
+Stores the current paths to the specified file.
+
+Writes the current set of paths to the specified file, one path per line. This maintains path persistence between shell sessions.
+
+
+\begin{DoxyParams}{Parameters}
+{\em paths} & The vector of paths to be stored \\
+\hline
+{\em file\+Name} & The name of the file to write the paths to\\
+\hline
+\end{DoxyParams}
+Writes each path in the provided vector to a file, one path per line. This allows path settings to persist between shell sessions.
+
+
+\begin{DoxyParams}{Parameters}
+{\em paths} & Vector of paths to store \\
+\hline
+{\em file\+Name} & Name of the file to write to \\
+\hline
+\end{DoxyParams}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{wish_8cpp_a878b4dafe64b859b106cda58946fd9f2}\label{wish_8cpp_a878b4dafe64b859b106cda58946fd9f2}} 
+\index{wish.cpp@{wish.cpp}!BACKGROUND\_OPERATOR@{BACKGROUND\_OPERATOR}}
+\index{BACKGROUND\_OPERATOR@{BACKGROUND\_OPERATOR}!wish.cpp@{wish.cpp}}
+\doxysubsubsection{\texorpdfstring{BACKGROUND\_OPERATOR}{BACKGROUND\_OPERATOR}}
+{\footnotesize\ttfamily constexpr const char$\ast$ B\+A\+C\+K\+G\+R\+O\+U\+N\+D\+\_\+\+O\+P\+E\+R\+A\+T\+OR = \char`\"{}\&\char`\"{}\hspace{0.3cm}{\ttfamily [constexpr]}}
+
+\mbox{\Hypertarget{wish_8cpp_a09b55e9c1dd399e2c349a95fc528853f}\label{wish_8cpp_a09b55e9c1dd399e2c349a95fc528853f}} 
+\index{wish.cpp@{wish.cpp}!CD\_COMMAND@{CD\_COMMAND}}
+\index{CD\_COMMAND@{CD\_COMMAND}!wish.cpp@{wish.cpp}}
+\doxysubsubsection{\texorpdfstring{CD\_COMMAND}{CD\_COMMAND}}
+{\footnotesize\ttfamily constexpr const char$\ast$ C\+D\+\_\+\+C\+O\+M\+M\+A\+ND = \char`\"{}cd\char`\"{}\hspace{0.3cm}{\ttfamily [constexpr]}}
+
+\mbox{\Hypertarget{wish_8cpp_af7b8c42f161ac9cd66d0eb64332fabf9}\label{wish_8cpp_af7b8c42f161ac9cd66d0eb64332fabf9}} 
+\index{wish.cpp@{wish.cpp}!COMMAND\_NOT\_FOUND@{COMMAND\_NOT\_FOUND}}
+\index{COMMAND\_NOT\_FOUND@{COMMAND\_NOT\_FOUND}!wish.cpp@{wish.cpp}}
+\doxysubsubsection{\texorpdfstring{COMMAND\_NOT\_FOUND}{COMMAND\_NOT\_FOUND}}
+{\footnotesize\ttfamily constexpr int C\+O\+M\+M\+A\+N\+D\+\_\+\+N\+O\+T\+\_\+\+F\+O\+U\+ND = -\/1\hspace{0.3cm}{\ttfamily [constexpr]}}
+
+\mbox{\Hypertarget{wish_8cpp_ad2aca686bc2b0314313da74416295e13}\label{wish_8cpp_ad2aca686bc2b0314313da74416295e13}} 
+\index{wish.cpp@{wish.cpp}!DEFAULT\_PATHS\_FILE@{DEFAULT\_PATHS\_FILE}}
+\index{DEFAULT\_PATHS\_FILE@{DEFAULT\_PATHS\_FILE}!wish.cpp@{wish.cpp}}
+\doxysubsubsection{\texorpdfstring{DEFAULT\_PATHS\_FILE}{DEFAULT\_PATHS\_FILE}}
+{\footnotesize\ttfamily constexpr const char$\ast$ D\+E\+F\+A\+U\+L\+T\+\_\+\+P\+A\+T\+H\+S\+\_\+\+F\+I\+LE = \char`\"{}/workspaces/C\+O\+MP-\/354/paths.\+txt\char`\"{}\hspace{0.3cm}{\ttfamily [constexpr]}}
+
+\mbox{\Hypertarget{wish_8cpp_a4b8aa27a43fcbe1af2fa4b2ca223c7d5}\label{wish_8cpp_a4b8aa27a43fcbe1af2fa4b2ca223c7d5}} 
+\index{wish.cpp@{wish.cpp}!EXIT\_COMMAND@{EXIT\_COMMAND}}
+\index{EXIT\_COMMAND@{EXIT\_COMMAND}!wish.cpp@{wish.cpp}}
+\doxysubsubsection{\texorpdfstring{EXIT\_COMMAND}{EXIT\_COMMAND}}
+{\footnotesize\ttfamily constexpr const char$\ast$ E\+X\+I\+T\+\_\+\+C\+O\+M\+M\+A\+ND = \char`\"{}exit\char`\"{}\hspace{0.3cm}{\ttfamily [constexpr]}}
+
+\mbox{\Hypertarget{wish_8cpp_aed67ec15432a232f19a16de868322288}\label{wish_8cpp_aed67ec15432a232f19a16de868322288}} 
+\index{wish.cpp@{wish.cpp}!EXIT\_FAILURE\_CODE@{EXIT\_FAILURE\_CODE}}
+\index{EXIT\_FAILURE\_CODE@{EXIT\_FAILURE\_CODE}!wish.cpp@{wish.cpp}}
+\doxysubsubsection{\texorpdfstring{EXIT\_FAILURE\_CODE}{EXIT\_FAILURE\_CODE}}
+{\footnotesize\ttfamily constexpr int E\+X\+I\+T\+\_\+\+F\+A\+I\+L\+U\+R\+E\+\_\+\+C\+O\+DE = 1\hspace{0.3cm}{\ttfamily [constexpr]}}
+
+\mbox{\Hypertarget{wish_8cpp_a77072842d0b5bb012e91e2e91d718e62}\label{wish_8cpp_a77072842d0b5bb012e91e2e91d718e62}} 
+\index{wish.cpp@{wish.cpp}!EXIT\_SUCCESS\_CODE@{EXIT\_SUCCESS\_CODE}}
+\index{EXIT\_SUCCESS\_CODE@{EXIT\_SUCCESS\_CODE}!wish.cpp@{wish.cpp}}
+\doxysubsubsection{\texorpdfstring{EXIT\_SUCCESS\_CODE}{EXIT\_SUCCESS\_CODE}}
+{\footnotesize\ttfamily constexpr int E\+X\+I\+T\+\_\+\+S\+U\+C\+C\+E\+S\+S\+\_\+\+C\+O\+DE = 0\hspace{0.3cm}{\ttfamily [constexpr]}}
+
+\mbox{\Hypertarget{wish_8cpp_ad39583ac4359318f1d0b3684dcde2584}\label{wish_8cpp_ad39583ac4359318f1d0b3684dcde2584}} 
+\index{wish.cpp@{wish.cpp}!FILE\_PERMISSIONS@{FILE\_PERMISSIONS}}
+\index{FILE\_PERMISSIONS@{FILE\_PERMISSIONS}!wish.cpp@{wish.cpp}}
+\doxysubsubsection{\texorpdfstring{FILE\_PERMISSIONS}{FILE\_PERMISSIONS}}
+{\footnotesize\ttfamily constexpr mode\+\_\+t F\+I\+L\+E\+\_\+\+P\+E\+R\+M\+I\+S\+S\+I\+O\+NS = S\+\_\+\+I\+R\+U\+SR $\vert$ S\+\_\+\+I\+W\+U\+SR\hspace{0.3cm}{\ttfamily [constexpr]}}
+
+\mbox{\Hypertarget{wish_8cpp_a22566d1abec4431d22bfa315e8591d81}\label{wish_8cpp_a22566d1abec4431d22bfa315e8591d81}} 
+\index{wish.cpp@{wish.cpp}!PATH\_COMMAND@{PATH\_COMMAND}}
+\index{PATH\_COMMAND@{PATH\_COMMAND}!wish.cpp@{wish.cpp}}
+\doxysubsubsection{\texorpdfstring{PATH\_COMMAND}{PATH\_COMMAND}}
+{\footnotesize\ttfamily constexpr const char$\ast$ P\+A\+T\+H\+\_\+\+C\+O\+M\+M\+A\+ND = \char`\"{}path\char`\"{}\hspace{0.3cm}{\ttfamily [constexpr]}}
+
+\mbox{\Hypertarget{wish_8cpp_acb933c895b0fba41e8f6bd58b0d5eedb}\label{wish_8cpp_acb933c895b0fba41e8f6bd58b0d5eedb}} 
+\index{wish.cpp@{wish.cpp}!PROMPT@{PROMPT}}
+\index{PROMPT@{PROMPT}!wish.cpp@{wish.cpp}}
+\doxysubsubsection{\texorpdfstring{PROMPT}{PROMPT}}
+{\footnotesize\ttfamily constexpr const char$\ast$ P\+R\+O\+M\+PT = \char`\"{}wish$>$ \char`\"{}\hspace{0.3cm}{\ttfamily [constexpr]}}
+
+\mbox{\Hypertarget{wish_8cpp_a79d8afb5d6fa51c4b28ef7bba496fc8e}\label{wish_8cpp_a79d8afb5d6fa51c4b28ef7bba496fc8e}} 
+\index{wish.cpp@{wish.cpp}!REDIRECT\_OPERATOR@{REDIRECT\_OPERATOR}}
+\index{REDIRECT\_OPERATOR@{REDIRECT\_OPERATOR}!wish.cpp@{wish.cpp}}
+\doxysubsubsection{\texorpdfstring{REDIRECT\_OPERATOR}{REDIRECT\_OPERATOR}}
+{\footnotesize\ttfamily constexpr const char$\ast$ R\+E\+D\+I\+R\+E\+C\+T\+\_\+\+O\+P\+E\+R\+A\+T\+OR = \char`\"{}$>$\char`\"{}\hspace{0.3cm}{\ttfamily [constexpr]}}
+

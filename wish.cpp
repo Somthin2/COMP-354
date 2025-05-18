@@ -28,6 +28,19 @@
 #include <sys/mman.h> 
 #include <string>
 
+// Constants for better readability and safety
+constexpr const char* DEFAULT_PATHS_FILE = "/workspaces/COMP-354/paths.txt";
+constexpr const char* PROMPT = "wish> ";
+constexpr const char* EXIT_COMMAND = "exit";
+constexpr const char* CD_COMMAND = "cd";
+constexpr const char* PATH_COMMAND = "path";
+constexpr const char* REDIRECT_OPERATOR = ">";
+constexpr const char* BACKGROUND_OPERATOR = "&";
+constexpr int COMMAND_NOT_FOUND = -1;
+constexpr int EXIT_SUCCESS_CODE = 0;
+constexpr int EXIT_FAILURE_CODE = 1;
+constexpr mode_t FILE_PERMISSIONS = S_IRUSR | S_IWUSR;
+
 using namespace std;
 
 /**
@@ -49,7 +62,7 @@ vector<string> readPaths();
  * @param paths The vector of paths to be stored
  * @param fileName The name of the file to write the paths to
  */
-void storePaths(vector<string> &paths, const string fileName);
+void storePaths(const vector<string> &paths, const string &fileName);
 
 /**
  * @brief Searches for a string in a vector and returns its index
@@ -86,18 +99,23 @@ void runCommandLineCommand(vector<string> &args);
 int main(int argc, char *argv[])
 {
     // Create shared memory for the parent variable
-    int *parent = (int *)mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+    int *parent = static_cast<int*>(mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, 
+                                        MAP_SHARED | MAP_ANONYMOUS, -1, 0));
+    if (parent == MAP_FAILED) {
+        std::cerr << "mmap failed" << std::endl;
+        return EXIT_FAILURE_CODE;
+    }
     *parent = 0;
 
     while(true)
     {
         string command;
-        int pid;
+        int pid = 0;
 
         if (argc == 1)
         {
             // Interactive mode
-            cout << "wish> " ;
+            cout << PROMPT;
 
             // Reads a line from stream into our String 
             getline(cin, command);
@@ -114,7 +132,7 @@ int main(int argc, char *argv[])
             if (!inputFile.is_open())
             {
                 cerr << "Error: Could not open file " << argv[1] << endl;
-                return 1;
+                return EXIT_FAILURE_CODE;
             }
 
             string command;
@@ -125,7 +143,7 @@ int main(int argc, char *argv[])
                 // Process the command (same as interactive mode)
                 stringstream ss(command);
                 vector<string> args;
-                string arg,temp="";
+                string arg, temp;
                 while (ss >> arg)
                 {
                     temp += arg + " ";
@@ -134,29 +152,34 @@ int main(int argc, char *argv[])
 
                 // Remove all spaces for empty command check
                 temp.erase(std::remove(temp.begin(), temp.end(), ' '), temp.end());               
-                if (temp == "") continue;
+                if (temp.empty()) continue;
 
-                if (args[0] == "exit") 
+                if (!args.empty() && args[0] == EXIT_COMMAND) 
                 {
-                    cout<<"GoodBye !"<<endl;
-                    exit(0);
+                    cout << "GoodBye !" << endl;
+                    exit(EXIT_SUCCESS_CODE);
                 }
-                runCommandLineCommand(args);
-                temp="";
+                
+                if (!args.empty()) {
+                    runCommandLineCommand(args);
+                }
+                
+                temp.clear();
                 args.clear();
             }
         
             inputFile.close();
+            return EXIT_SUCCESS_CODE;  // Exit after processing batch file
         }
 
         // Split the command into arguments
         stringstream ss(command);
         string arg;
-        vector<string> args,paths = readPaths();
+        vector<string> args, paths = readPaths();
 
         while (ss >> arg)
         {
-            if (arg == "&")
+            if (arg == BACKGROUND_OPERATOR)
             {
                 // Handle background process
                 pid = fork();
@@ -170,35 +193,44 @@ int main(int argc, char *argv[])
                 else if (pid > 0)
                 {
                     // Parent process
-                    if (*parent == 0) *parent = pid ;
-
+                    if (*parent == 0) *parent = pid;
                     break;
+                }
+                else {
+                    // Fork failed
+                    cerr << "Fork failed!" << endl;
                 }
             }
             args.push_back(arg);
         }
 
-        if(args[0] != "exit")
+        if (args.empty()) {
+            continue;  // Skip empty commands
+        }
+
+        if(args[0] != EXIT_COMMAND)
         {
-            if (args[0] == "cd")
+            if (args[0] == CD_COMMAND)
             {
                 // Handle change directory command
                 if (args.size() != 2)
                 {
-                    cout<<"Invalid Command"<<endl;
+                    cout << "Invalid Command" << endl;
                     continue;
                 }
                 else
                 {
-                    chdir(args[1].c_str());
+                    if (chdir(args[1].c_str()) != 0) {
+                        cerr << "cd: " << args[1] << ": No such file or directory" << endl;
+                    }
                 }
             }
-            else if (args[0] == "path")
+            else if (args[0] == PATH_COMMAND)
             {
                 // Handle path command
                 paths.clear();
 
-                for (int i = 1 ; i < args.size(); i++)
+                for (size_t i = 1; i < args.size(); i++)
                 {
                     // Store new paths in the paths vector
                     paths.push_back(args[i]);
@@ -207,14 +239,14 @@ int main(int argc, char *argv[])
                 // Save the updated paths to the file
                 storePaths(paths, "paths.txt");
 
-                cout<<"Paths have been updated"<<endl;
+                cout << "Paths have been updated" << endl;
             }
             else
             {
                 // Execute external command
                 runCommandLineCommand(args);
-                cout<<pid<<" ? " << *parent <<endl;
-                if (*parent != 0 && pid != *parent) exit(0); // Exit child process
+                cout << pid << " ? " << *parent << endl;
+                if (*parent != 0 && pid != *parent) exit(EXIT_SUCCESS_CODE); // Exit child process
 
                 // Wait for all child processes to finish
                 int status;
@@ -231,11 +263,16 @@ int main(int argc, char *argv[])
         else
         {
             // Exit shell
-            cout<<"Goodbye !"<<endl;
-            exit(0);
+            cout << "Goodbye !" << endl;
+            // Clean up shared memory
+            munmap(parent, sizeof(int));
+            exit(EXIT_SUCCESS_CODE);
         }
     }
-    return 0;
+    
+    // Clean up shared memory before returning
+    munmap(parent, sizeof(int));
+    return EXIT_SUCCESS_CODE;
 }
 
 /**
@@ -250,21 +287,23 @@ int main(int argc, char *argv[])
 vector<string> readPaths()
 {
     vector<string> paths;
-    ifstream file("/workspaces/COMP-354/paths.txt");
+    ifstream file(DEFAULT_PATHS_FILE);
     string line;
 
     if (file.is_open())
     {
         while (getline(file, line))
         {
-            paths.push_back(line);
+            if (!line.empty()) {
+                paths.push_back(line);
+            }
         }
         file.close();
     }
     else
     {
         // For debugging
-        cout << "Unable to open file: " << "/workspaces/COMP-354/paths.txt" << endl;
+        cerr << "Unable to open file: " << DEFAULT_PATHS_FILE << endl;
     }
 
     return paths;
@@ -279,13 +318,13 @@ vector<string> readPaths()
  * @param paths Vector of paths to store
  * @param fileName Name of the file to write to
  */
-void storePaths(vector<string> &paths,const string fileName)
+void storePaths(const vector<string> &paths, const string &fileName)
 {
     ofstream file(fileName); 
 
     if (file.is_open())
     {
-        for (int i = 0 ; i < paths.size(); i++)
+        for (size_t i = 0; i < paths.size(); i++)
         {
             file << paths[i] << endl;
         }
@@ -294,7 +333,7 @@ void storePaths(vector<string> &paths,const string fileName)
     else
     {
         // For debugging
-        cerr << "Unable to open file: paths.txt" << endl;
+        cerr << "Unable to open file for writing: " << fileName << endl;
     }
 }
 
@@ -313,11 +352,11 @@ int isStringInVector(const vector<string> &vec, const string &str)
     auto it = find(vec.begin(), vec.end(), str);
     if (it != vec.end())
     {
-        return distance(vec.begin(), it);
+        return static_cast<int>(distance(vec.begin(), it));
     }
     else
     {
-        return -1; 
+        return COMMAND_NOT_FOUND; 
     }
 }
 
@@ -333,122 +372,139 @@ int isStringInVector(const vector<string> &vec, const string &str)
 void runCommandLineCommand(vector<string> &args)
 {
     bool commandExecuted = false;
-    vector<string> paths = readPaths();
-
+    
     if (args.empty()) {
         cerr << "No command provided!" << endl;
         return;
     }
-    // Convert vector<string> to char* array for execvp
+    
+    const vector<string> paths = readPaths();
+    
+    // Search for the executable in all paths
+    for (const string &path : paths)
+    {
+        if (commandExecuted) break;
 
-        for (const string &path : paths)
+        const string executablePath = path + "/" + args[0];
+        if (access(executablePath.c_str(), X_OK) == 0)
         {
-            if (commandExecuted == true) break;
+            int pid = fork();
 
-            else if (access((path + "/" + args[0]).c_str(), X_OK) == 0)
+            if (pid == 0) // Child process
             {
-                int pid = fork();
+                // Check for redirection operator
+                const int redirectPos = isStringInVector(args, REDIRECT_OPERATOR);
 
-                if (pid == 0)
-                {
-                    // Check for redirection operator
-                    int pos = isStringInVector(args,">");
-
-                    // Convert string arguments to char* for execvp
-                    vector<char*> c_args;
-                    for (const auto& arg : args) {
-                        c_args.push_back(const_cast<char*>(arg.c_str()));
-                    }
-                    c_args.push_back(nullptr); // Null-terminate the array                
-                    
-                    if (pos != -1)
-                    {
-                        // Handle output redirection
-                        // Currently assuming only one argument after ">"
-                        if (args.size() - pos != 2)
-                        {
-                            cout<<"Invalid arguments"<<endl;
-                            exit(1);
-                        }
-                        else
-                        {
-                            // Open the file for writing
-                            int fd = open(args[pos + 1].c_str(), O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
-                            if (fd < 0)
-                            {
-                                cerr << "Failed to open file: " << args[pos + 1] << endl;
-                                exit(1);
-                            }
-
-                            // Redirect stdout to the file
-                            dup2(fd, STDOUT_FILENO);
-                            close(fd);
-
-                            if (execvp(c_args[0], c_args.data()) == -1) 
-                            {
-                                perror("execvp failed");
-                                exit(EXIT_FAILURE); // Exit if execvp fails
-                            }                            
-                        }
-                        exit(0);
-                    }
-                    
-                    // Execute the command
-                    if (execvp(c_args[0], c_args.data()) == -1) 
-                    {
-                        perror("execvp failed");
-                        exit(EXIT_FAILURE); // Exit if execvp fails
-                    }                    
-                    exit(0);
+                // Convert string arguments to char* for execvp
+                vector<char*> c_args;
+                for (const auto& arg : args) {
+                    c_args.push_back(const_cast<char*>(arg.c_str()));
                 }
-                else if (pid > 0)
-                {
-                    // Parent process waits for child
-                    wait(NULL);
-                    commandExecuted = true;
-                    continue;
-                }
-            }
-        }
-
-        if (!commandExecuted)
-        {
-            if(args[0] != "exit")
-            {
-                if (args[0] == "cd")
-                {
-                    // Handle built-in cd command
-                    if (args.size() != 2)
-                    {
-                        cout<<"Invalid Command"<<endl;
+                c_args.push_back(nullptr); // Null-terminate the array                
                 
+                if (redirectPos != COMMAND_NOT_FOUND)
+                {
+                    // Handle output redirection
+                    // Currently assuming only one argument after ">"
+                    if (args.size() - redirectPos != 2)
+                    {
+                        cerr << "Invalid redirection syntax" << endl;
+                        exit(EXIT_FAILURE_CODE);
                     }
                     else
                     {
-                        chdir(args[1].c_str());
+                        // Open the file for writing
+                        const int fd = open(args[redirectPos + 1].c_str(), 
+                                      O_WRONLY | O_CREAT | O_TRUNC, 
+                                      FILE_PERMISSIONS);
+                        if (fd < 0)
+                        {
+                            cerr << "Failed to open file: " << args[redirectPos + 1] << endl;
+                            exit(EXIT_FAILURE_CODE);
+                        }
+
+                        // Redirect stdout to the file
+                        if (dup2(fd, STDOUT_FILENO) < 0) {
+                            cerr << "Failed to redirect output" << endl;
+                            close(fd);
+                            exit(EXIT_FAILURE_CODE);
+                        }
+                        close(fd);
+
+                        // Remove redirection operator and filename from args
+                        c_args[redirectPos] = nullptr;
+                        
+                        if (execvp(executablePath.c_str(), c_args.data()) == -1) 
+                        {
+                            perror("execvp failed");
+                            exit(EXIT_FAILURE_CODE);
+                        }                            
                     }
+                    exit(EXIT_SUCCESS_CODE);
                 }
-                else if (args[0] == "path")
+                
+                // Execute the command
+                if (execvp(executablePath.c_str(), c_args.data()) == -1) 
                 {
-                    // Handle built-in path command
-                    paths.clear();
+                    perror("execvp failed");
+                    exit(EXIT_FAILURE_CODE);
+                }                    
+                exit(EXIT_SUCCESS_CODE);
+            }
+            else if (pid > 0) // Parent process
+            {
+                // Parent process waits for child
+                int status;
+                waitpid(pid, &status, 0);
+                commandExecuted = true;
+            }
+            else // Fork failed
+            {
+                cerr << "Fork failed" << endl;
+                return;
+            }
+        }
+    }
 
-                    for (int i = 1 ; i < args.size(); i++)
-                    {
-                        // Store new paths
-                        paths.push_back(args[i]);
-                    }
-
-                    // Save paths to file
-                    storePaths(paths, "paths.txt");
-
-                    cout<<"Paths have been updated"<<endl;
+    if (!commandExecuted)
+    {
+        if (!args.empty() && args[0] != EXIT_COMMAND)
+        {
+            if (args[0] == CD_COMMAND)
+            {
+                // Handle built-in cd command
+                if (args.size() != 2)
+                {
+                    cout << "Invalid Command" << endl;
                 }
                 else
                 {
-                    // Command not found
-                    cout << "Wrong Input !" << endl;
+                    if (chdir(args[1].c_str()) != 0) {
+                        cerr << "cd: " << args[1] << ": No such file or directory" << endl;
+                    }
                 }
             }
+            else if (args[0] == PATH_COMMAND)
+            {
+                // Handle built-in path command
+                vector<string> newPaths;
+
+                for (size_t i = 1; i < args.size(); i++)
+                {
+                    // Store new paths
+                    newPaths.push_back(args[i]);
+                }
+
+                // Save paths to file
+                storePaths(newPaths, "paths.txt");
+
+                cout << "Paths have been updated" << endl;
+            }
+            else
+            {
+                // Command not found
+                cerr << "Command not found: " << args[0] << endl;
+            }
         }
+    }
 }
