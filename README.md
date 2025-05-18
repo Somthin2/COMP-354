@@ -6,7 +6,7 @@ This repository contains a simple shell implementation written in C++. The shell
 
 This project is documented using Doxygen and hosted on GitHub Pages.
 
-[Click here to view the full HTML documentation](https://Somthin2.github.io/COMP-354/)
+[Click here to view the full HTML documentation](https://somthin2.github.io/COMP-354/wish_8cpp.html)
 
 ## Features
 
