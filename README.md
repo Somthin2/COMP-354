@@ -49,6 +49,4 @@ Batch mode:
   - `html/`: HTML documentation
     - `index.html`: Main documentation page
 
-## License
 
-This project is licensed under the [MIT License](LICENSE).
